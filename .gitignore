@@ -1,0 +1,31 @@
+# Environments / secrets
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# App data / generated artifacts (not source)
+data/datasets/*
+data/experiments/*
+data/reports/*
+data/vector_stores/*
+data/logs/*
+!data/datasets/.gitkeep
+!data/experiments/.gitkeep
+!data/reports/.gitkeep
+!data/vector_stores/.gitkeep
+!data/logs/.gitkeep
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
