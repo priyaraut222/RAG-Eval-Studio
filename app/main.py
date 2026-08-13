@@ -23,7 +23,9 @@ import streamlit as st
 
 from app.components.metric_card import MetricCardData, render_metric_row, section_header
 from app.components.styles import inject_theme
+from app.pages import dataset_builder, retrieval_evaluation
 from backend.config.settings import get_settings
+from backend.dataset.storage import list_datasets
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -105,9 +107,10 @@ def render_overview() -> None:
         "Evaluate retrieval quality, faithfulness, and cost across RAG configurations — side by side.",
     )
 
+    dataset_count = len(list_datasets())
     render_metric_row(
         [
-            MetricCardData(label="Datasets", value="0", tone="info", help_text="Evaluation datasets built"),
+            MetricCardData(label="Datasets", value=str(dataset_count), tone="info", help_text="Evaluation datasets built"),
             MetricCardData(label="Experiments", value="0", tone="info", help_text="Configurations run"),
             MetricCardData(label="Avg. Faithfulness", value="—", tone="info", help_text="Across latest run"),
             MetricCardData(label="Avg. Latency", value="—", tone="info", help_text="Per query, latest run"),
@@ -141,8 +144,8 @@ def render_overview() -> None:
                 <h4 style="margin-top:0;">Build status</h4>
                 <p style="color: var(--rag-text-secondary); font-size: 0.9rem; line-height:1.8;">
                     ✅ Phase 1 — Project structure &amp; setup<br>
-                    ⬜ Phase 2 — Dataset Builder<br>
-                    ⬜ Phase 3 — Retrieval Metrics<br>
+                    ✅ Phase 2 — Dataset Builder<br>
+                    ✅ Phase 3 — Retrieval Metrics<br>
                     ⬜ Phase 4 — LLM Evaluation<br>
                     ⬜ Phase 5 — Dashboard<br>
                     ⬜ Phase 6 — Experiment Comparison<br>
@@ -171,6 +174,10 @@ def main() -> None:
 
     if nav_choice == "Overview":
         render_overview()
+    elif nav_choice == "Dataset Builder":
+        dataset_builder.render()
+    elif nav_choice == "Retrieval Evaluation":
+        retrieval_evaluation.render()
     else:
         render_placeholder(nav_choice)
 
