@@ -25,6 +25,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from backend.dataset.chunking import Chunk
+from backend.retrieval.vector_store import BaseVectorStore, InMemoryVectorStore, get_vector_store
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -154,37 +155,42 @@ class EmbeddingRetriever(BaseRetriever):
 
     name = "embedding"
 
-    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", vector_store: "BaseVectorStore | None" = None) -> None:
         from sentence_transformers import SentenceTransformer  # heavy import, deferred
 
         self.model_name = model_name
         self._model = SentenceTransformer(model_name)
-        self._chunk_ids: list[str] = []
-        self._chunk_texts: list[str] = []
-        self._doc_embeddings: np.ndarray | None = None
+        self._chunk_texts_by_id: dict[str, str] = {}
+        self._vector_store: BaseVectorStore = vector_store or InMemoryVectorStore()
 
     def index(self, chunks: list[Chunk]) -> None:
-        self._chunk_ids = [f"chunk_{c.chunk_index}" for c in chunks]
-        self._chunk_texts = [c.text for c in chunks]
-        self._doc_embeddings = self._model.encode(self._chunk_texts, normalize_embeddings=True)
+        ids = [f"chunk_{c.chunk_index}" for c in chunks]
+        texts = [c.text for c in chunks]
+        self._chunk_texts_by_id = dict(zip(ids, texts))
+        embeddings = self._model.encode(texts, normalize_embeddings=True)
+        self._vector_store.build(ids, np.asarray(embeddings))
 
     def retrieve(self, query: str, top_k: int) -> list[RetrievedChunk]:
-        if self._doc_embeddings is None or len(self._chunk_ids) == 0:
+        if not self._chunk_texts_by_id:
             return []
-        query_embedding = self._model.encode([query], normalize_embeddings=True)[0]
-        similarities = self._doc_embeddings @ query_embedding
-        top_indices = np.argsort(-similarities)[:top_k]
+        query_embedding = np.asarray(self._model.encode([query], normalize_embeddings=True)[0])
+        hits = self._vector_store.search(query_embedding, top_k)
         return [
-            RetrievedChunk(chunk_id=self._chunk_ids[i], text=self._chunk_texts[i], score=float(similarities[i]))
-            for i in top_indices
+            RetrievedChunk(chunk_id=chunk_id, text=self._chunk_texts_by_id.get(chunk_id, ""), score=score)
+            for chunk_id, score in hits
         ]
 
 
-def get_retriever(name: str = "tfidf", embedding_model: str | None = None) -> BaseRetriever:
-    """Factory: build a retriever, falling back to TF-IDF if embeddings aren't available."""
+def get_retriever(name: str = "tfidf", embedding_model: str | None = None, vector_store_name: str = "in_memory") -> BaseRetriever:
+    """Factory: build a retriever, falling back to TF-IDF if embeddings aren't available.
+
+    `vector_store_name` only applies to the `"embedding"` retriever —
+    TF-IDF search doesn't go through a vector store.
+    """
     if name == "embedding":
         try:
-            return EmbeddingRetriever(model_name=embedding_model or "sentence-transformers/all-MiniLM-L6-v2")
+            store = get_vector_store(vector_store_name)
+            return EmbeddingRetriever(model_name=embedding_model or "sentence-transformers/all-MiniLM-L6-v2", vector_store=store)
         except Exception as exc:  # ImportError, OSError (no network for model download), etc.
             logger.warning(f"Embedding retriever unavailable ({exc}) — falling back to TF-IDF")
             return TfidfRetriever()

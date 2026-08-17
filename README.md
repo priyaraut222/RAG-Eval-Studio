@@ -83,11 +83,11 @@ This project is being built in phases; each phase is fully functional before
 the next begins.
 
 - [x] **Phase 1** — Project structure, config, theming, app shell
-- [ ] **Phase 2** — Dataset Builder
-- [ ] **Phase 3** — Retrieval metrics
-- [ ] **Phase 4** — LLM evaluation metrics
-- [ ] **Phase 5** — Dashboard
-- [ ] **Phase 6** — Experiment comparison
+- [x] **Phase 2** — Dataset Builder
+- [x] **Phase 3** — Retrieval metrics
+- [x] **Phase 4** — LLM evaluation metrics
+- [x] **Phase 5** — Dashboard
+- [x] **Phase 6** — Experiment comparison
 - [ ] **Phase 7** — Reporting
 - [ ] **Phase 8** — Testing and polishing
 
