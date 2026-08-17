@@ -33,21 +33,25 @@ rag-evaluation-studio/
 ├── app/                    # Streamlit frontend
 │   ├── main.py             # Entry point: page config, theme, nav shell
 │   ├── components/         # Reusable UI: cards, styles, charts
-│   └── pages/               # Feature pages (dataset builder, dashboard, ...)
+│   └── pages/               # dataset_builder, retrieval_evaluation, llm_evaluation,
+│                             # experiment_manager, dashboard, reports, settings
 ├── backend/
-│   ├── config/              # Settings (pydantic) + design tokens (theme.py)
-│   ├── dataset/              # Dataset upload/synthesis logic
-│   ├── retrieval/            # Retrieval metrics (Precision@K, MRR, nDCG, ...)
+│   ├── config/              # Settings (pydantic), design tokens, LLM pricing table
+│   ├── dataset/              # Chunking, loaders, synthesis, schema, storage
+│   ├── retrieval/            # Metrics, TF-IDF/embedding retrievers, vector stores, reranker
 │   ├── evaluation/
-│   │   └── metrics/           # Faithfulness, relevancy, hallucination, etc.
-│   ├── experiments/           # Experiment run + comparison logic
+│   │   └── metrics/           # Faithfulness, relevancy, hallucination, etc. + LLM judge
+│   ├── experiments/           # Config, runner, results schema, storage
 │   ├── reports/                # PDF/CSV/JSON/Markdown report generation
-│   └── utils/                  # Logging and shared helpers
-├── tests/                   # pytest suite, mirrors backend/ structure
+│   └── utils/                  # Logging, unified LLM client (with offline fallback)
+├── tests/                   # pytest suite, mirrors backend/ structure (87+ tests)
 ├── assets/                  # Static images/css
 ├── docs/                    # Design notes, roadmap
+├── .github/workflows/       # CI: runs the test suite on push/PR
 ├── .streamlit/config.toml   # Native Streamlit theme (light, matches design tokens)
 ├── .env.example
+├── pyproject.toml           # pytest + ruff config
+├── LICENSE
 └── requirements.txt
 ```
 
@@ -58,9 +62,9 @@ Python.
 ## Tech stack
 
 - **Frontend:** Streamlit, Plotly, streamlit-aggrid
-- **RAG/retrieval:** LangChain, FAISS, ChromaDB, SentenceTransformers
-- **Evaluation:** Ragas, DeepEval
-- **LLM providers:** OpenAI, Google Gemini (local models supported via config)
+- **RAG/retrieval:** LangChain-compatible chunking, FAISS, ChromaDB, SentenceTransformers (each with graceful offline fallback)
+- **Evaluation:** custom LLM-judge metrics with an offline heuristic fallback (`backend/evaluation/`); Ragas/DeepEval ship in `requirements.txt` as optional extensions for teams that want to swap in those frameworks' scorers
+- **LLM providers:** OpenAI, Google Gemini, or a built-in offline heuristic provider — no key required to run the full app
 - **Data:** Pandas, NumPy
 
 ## Getting started
@@ -88,17 +92,40 @@ the next begins.
 - [x] **Phase 4** — LLM evaluation metrics
 - [x] **Phase 5** — Dashboard
 - [x] **Phase 6** — Experiment comparison
-- [ ] **Phase 7** — Reporting
-- [ ] **Phase 8** — Testing and polishing
+- [x] **Phase 7** — Reporting
+- [x] **Phase 8** — Testing and polishing
 
 See `docs/roadmap.md` for phase-by-phase detail.
 
+## Runs with zero configuration
+
+Every feature works with no API key and no external services:
+
+- **No LLM key configured** → an offline heuristic provider generates
+  extractive answers and scores every metric with token-overlap
+  heuristics instead of an LLM judge. The Settings page shows this
+  status plainly; nothing fails silently.
+- **`sentence-transformers` / `faiss-cpu` / `chromadb` not installed** →
+  the embedding retriever and FAISS/Chroma vector stores fall back to
+  the built-in TF-IDF retriever / in-memory numpy vector store, with a
+  logged warning.
+
+Add real keys in `.env` and install the optional packages any time to
+get LLM-judged metrics and semantic retrieval — the UI and data model
+don't change either way.
+
 ## Testing
+
+87+ tests across chunking, retrieval metrics, the TF-IDF/vector-store
+layer, all six LLM evaluation metrics, the experiment runner, storage
+round-trips, and report generation.
 
 ```bash
 pytest --cov=backend tests/
 ```
 
+CI runs the full suite on every push via `.github/workflows/tests.yml`.
+
 ## License
 
-MIT
+MIT — see `LICENSE`.
