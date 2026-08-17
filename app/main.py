@@ -23,7 +23,7 @@ import streamlit as st
 
 from app.components.metric_card import MetricCardData, render_metric_row, section_header
 from app.components.styles import inject_theme
-from app.pages import dataset_builder, retrieval_evaluation
+from app.pages import dashboard, dataset_builder, llm_evaluation, retrieval_evaluation
 from backend.config.settings import get_settings
 from backend.dataset.storage import list_datasets
 from backend.utils.logger import get_logger
@@ -146,8 +146,8 @@ def render_overview() -> None:
                     ✅ Phase 1 — Project structure &amp; setup<br>
                     ✅ Phase 2 — Dataset Builder<br>
                     ✅ Phase 3 — Retrieval Metrics<br>
-                    ⬜ Phase 4 — LLM Evaluation<br>
-                    ⬜ Phase 5 — Dashboard<br>
+                    ✅ Phase 4 — LLM Evaluation<br>
+                    ✅ Phase 5 — Dashboard<br>
                     ⬜ Phase 6 — Experiment Comparison<br>
                     ⬜ Phase 7 — Reporting<br>
                     ⬜ Phase 8 — Testing &amp; Polish
@@ -178,6 +178,10 @@ def main() -> None:
         dataset_builder.render()
     elif nav_choice == "Retrieval Evaluation":
         retrieval_evaluation.render()
+    elif nav_choice == "LLM Evaluation":
+        llm_evaluation.render()
+    elif nav_choice == "Dashboard":
+        dashboard.render()
     else:
         render_placeholder(nav_choice)
 

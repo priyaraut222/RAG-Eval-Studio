@@ -183,6 +183,7 @@ class LLMClient:
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or get_settings()
         self.active_provider: str = self._settings.default_llm_provider
+        self.model_name: str = "heuristic-v1"
         self._provider = self._build_provider()
 
     def _build_provider(self) -> _Provider:
@@ -190,6 +191,7 @@ class LLMClient:
 
         if provider == "openai":
             if self._settings.openai_api_key:
+                self.model_name = self._settings.default_openai_model
                 return _OpenAIProvider(self._settings.openai_api_key, self._settings.default_openai_model)
             logger.warning("OpenAI selected but OPENAI_API_KEY is not set — falling back to local heuristic provider")
             self.active_provider = "local"
@@ -197,6 +199,7 @@ class LLMClient:
 
         if provider == "gemini":
             if self._settings.google_api_key:
+                self.model_name = self._settings.default_gemini_model
                 return _GeminiProvider(self._settings.google_api_key, self._settings.default_gemini_model)
             logger.warning("Gemini selected but GOOGLE_API_KEY is not set — falling back to local heuristic provider")
             self.active_provider = "local"

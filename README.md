@@ -77,6 +77,21 @@ streamlit run app/main.py
 No API keys are required to launch the app shell — they're only needed once
 you run an evaluation against a real LLM provider.
 
+## Development roadmap
+
+This project is being built in phases; each phase is fully functional before
+the next begins.
+
+- [x] **Phase 1** — Project structure, config, theming, app shell
+- [ ] **Phase 2** — Dataset Builder
+- [ ] **Phase 3** — Retrieval metrics
+- [ ] **Phase 4** — LLM evaluation metrics
+- [ ] **Phase 5** — Dashboard
+- [ ] **Phase 6** — Experiment comparison
+- [ ] **Phase 7** — Reporting
+- [ ] **Phase 8** — Testing and polishing
+
+See `docs/roadmap.md` for phase-by-phase detail.
 
 ## Testing
 
